@@ -5,14 +5,21 @@
 #include <unordered_set>
 using namespace std;
 
+ifstream *myFile;
+
+unordered_set<string> mySet;
+
 int main() {
-	unordered_set<string> mySet;
+	myFile = new ifstream();
 
 	string line;
-	ifstream myfile("gdscript.cpp");
+
+	myFile->open("gdscript.cpp");
+
 	mySet.insert("gdscript.cpp");
-	if (myfile.is_open()){
-		while( getline(myfile,line) ){
+
+	if (myFile->is_open()){
+		while( getline(*myFile,line) ){
 			if (line.find("#include")!=string::npos){
 				auto pos = line.find_first_not_of("\"< ", 8);
 				auto lgth = line.find_last_not_of("\"> ") - pos;
@@ -25,10 +32,12 @@ int main() {
 			cout << s << endl;
 		}
 
-		myfile.close();
+		myFile->close();
 	}
 
 	else cout << "Unable to open file"; 
+
+	delete(myFile);
 
 	return 0;
 }
