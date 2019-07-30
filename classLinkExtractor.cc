@@ -10,7 +10,8 @@ forward_list<string> myList;
 
 stack<string> myStack;
 
-ifstream *myFile;
+ifstream *myFileIn;
+ofstream *myFileOut;
 
 unordered_set<string> mySet;
 
@@ -20,17 +21,19 @@ void exploreFile(){
 	if( mySet.find( myStack.top() ) == mySet.end() ){
 		mySet.insert(myStack.top());
 
-		cout << "Explore : " << myStack.top() << endl;
+		(*myFileOut) << myStack.top() << endl;
 
 		for(auto s:myList){
-			myFile->open(s+myStack.top());
+			myFileIn->open(s+myStack.top());
 
-			if (myFile->is_open()){
-				while( getline(*myFile,line) ){
+			if (myFileIn->is_open()){
+				while( getline(*myFileIn, line) ){
 					if (line.find("#include")!=string::npos){
 						auto pos = line.find_first_not_of("\"< ", 8);
 						auto lgth = line.find_last_not_of("\"> ") - pos;
 						line = line.substr(pos, lgth+1);
+
+						(*myFileOut) << line << endl;
 
 						if ( mySet.find( line ) == mySet.end() ){
 							myStack.push(line);
@@ -38,42 +41,55 @@ void exploreFile(){
 					}
 				}
 
-				myFile->close();
+				myFileIn->close();
 				break;
 			}else{
-				cout << "Unable to open file : " << s+myStack.top() << endl;
+				(*myFileOut) << "Unable to open file : " << s+myStack.top() << endl;
 			}
 		}
+
+		(*myFileOut) << endl;
 	}
 
 	myStack.pop();
 }
 
 int main(int n, char* params[]) {
-	myFile = new ifstream();
-
 	if(n<2){
 		cout << "no input file" << endl;
 		return -1;
 	}
 
 	myStack.push(params[1]);
+	myFileIn = new ifstream();
 
-	for(int i=2; i<n; i++){
+	if(n<3){
+		cout << "no output file" <<endl;
+		return -1;
+	}
+
+	myFileOut = new ofstream(params[2]);
+
+	myList.push_front("./");
+
+	for(int i=3; i<n; i++){
 		myList.push_front(params[i]);
 	}
 
-	myList.push_front("./");
+	myList.reverse();
 
 	while(!myStack.empty()){
 		exploreFile();
 	}
 
+	myFileOut->close();
+
+	delete(myFileIn);
+	delete(myFileOut);
+
 	for(auto obj:mySet){
 		cout << obj << endl;
 	}
-
-	delete(myFile);
 
 	return 0;
 }
