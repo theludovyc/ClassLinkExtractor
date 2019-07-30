@@ -1,35 +1,9 @@
-// reading a text file
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <unordered_set>
 #include <stack>
 using namespace std;
-
-class CheckPath{
-	public:
-		string path;
-		bool b;
-
-		CheckPath(string s, bool b){
-			path=s;
-			b=b;
-  	}
-};
-
-struct CheckPath_Hasher{
-  size_t operator()(const CheckPath & obj) const{
-    return hash<string>()(obj.path);
-  }
-};
-
-struct CheckPath_Comparator{
-  bool operator()(const CheckPath & obj0, const CheckPath & obj1) const{
-    if (obj0.path == obj1.path)
-      return true;
-    return false;
-  }
-};
 
 ifstream *myFile;
 
@@ -52,7 +26,9 @@ void exploreFile(){
 					auto lgth = line.find_last_not_of("\"> ") - pos;
 					line = line.substr(pos, lgth+1);
 
-					myStack.push(line);
+					if ( mySet.find( line ) == mySet.end() ){
+						myStack.push(line);
+					}
 				}
 			}
 
@@ -65,10 +41,15 @@ void exploreFile(){
 	myStack.pop();
 }
 
-int main() {
+int main(int n, char* params[]) {
 	myFile = new ifstream();
 
-	myStack.push("gdscript.cpp");
+	if(n<2){
+		cout << "no input file" << endl;
+		return -1;
+	}
+
+	myStack.push(params[1]);
 
 	while(!myStack.empty()){
 		exploreFile();
