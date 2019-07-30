@@ -1,13 +1,16 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <unordered_set>
+#include <forward_list>
 #include <stack>
+#include <unordered_set>
 using namespace std;
 
-ifstream *myFile;
+forward_list<string> myList;
 
 stack<string> myStack;
+
+ifstream *myFile;
 
 unordered_set<string> mySet;
 
@@ -17,24 +20,29 @@ void exploreFile(){
 	if( mySet.find( myStack.top() ) == mySet.end() ){
 		mySet.insert(myStack.top());
 
-		myFile->open(myStack.top());
+		cout << "Explore : " << myStack.top() << endl;
 
-		if (myFile->is_open()){
-			while( getline(*myFile,line) ){
-				if (line.find("#include")!=string::npos){
-					auto pos = line.find_first_not_of("\"< ", 8);
-					auto lgth = line.find_last_not_of("\"> ") - pos;
-					line = line.substr(pos, lgth+1);
+		for(auto s:myList){
+			myFile->open(s+myStack.top());
 
-					if ( mySet.find( line ) == mySet.end() ){
-						myStack.push(line);
+			if (myFile->is_open()){
+				while( getline(*myFile,line) ){
+					if (line.find("#include")!=string::npos){
+						auto pos = line.find_first_not_of("\"< ", 8);
+						auto lgth = line.find_last_not_of("\"> ") - pos;
+						line = line.substr(pos, lgth+1);
+
+						if ( mySet.find( line ) == mySet.end() ){
+							myStack.push(line);
+						}
 					}
 				}
-			}
 
-			myFile->close();
-		}else{
-			cout << "Unable to open file : " << myStack.top() << endl;
+				myFile->close();
+				break;
+			}else{
+				cout << "Unable to open file : " << s+myStack.top() << endl;
+			}
 		}
 	}
 
@@ -50,6 +58,12 @@ int main(int n, char* params[]) {
 	}
 
 	myStack.push(params[1]);
+
+	for(int i=2; i<n; i++){
+		myList.push_front(params[i]);
+	}
+
+	myList.push_front("./");
 
 	while(!myStack.empty()){
 		exploreFile();
