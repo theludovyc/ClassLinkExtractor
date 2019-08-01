@@ -2,29 +2,29 @@
 #include <fstream>
 #include <string>
 #include <forward_list>
-#include <stack>
 #include <unordered_set>
 using namespace std;
 
 forward_list<string> myList;
 
-stack<string> myStack;
-
 ifstream *myFileIn;
 ofstream *myFileOut;
 
-unordered_set<string> mySet;
+unordered_set<string> fileToExplore;
+unordered_set<string> fileExplored;
 
 void exploreFile(){
 	string line;
 
-	if( mySet.find( myStack.top() ) == mySet.end() ){
-		mySet.insert(myStack.top());
+	string myFile = *fileToExplore.begin();
 
-		(*myFileOut) << myStack.top() << endl;
+	if( fileExplored.find(myFile) == fileExplored.end() ){
+		fileExplored.insert(myFile);
+
+		(*myFileOut) << myFile << endl;
 
 		for(auto s:myList){
-			myFileIn->open(s+myStack.top());
+			myFileIn->open(s+myFile);
 
 			if (myFileIn->is_open()){
 				while( getline(*myFileIn, line) ){
@@ -35,8 +35,8 @@ void exploreFile(){
 
 						(*myFileOut) << line << endl;
 
-						if ( mySet.find( line ) == mySet.end() ){
-							myStack.push(line);
+						if ( fileExplored.find(line) == fileExplored.end() ){
+							fileToExplore.insert(line);
 						}
 					}
 				}
@@ -44,14 +44,14 @@ void exploreFile(){
 				myFileIn->close();
 				break;
 			}else{
-				(*myFileOut) << "Unable to open file : " << s+myStack.top() << endl;
+				(*myFileOut) << "Unable to open file : " << s+myFile << endl;
 			}
 		}
 
 		(*myFileOut) << endl;
 	}
 
-	myStack.pop();
+	fileToExplore.erase(myFile);
 }
 
 int main(int n, char* params[]) {
@@ -60,7 +60,8 @@ int main(int n, char* params[]) {
 		return -1;
 	}
 
-	myStack.push(params[1]);
+	fileToExplore.insert(params[1]);
+
 	myFileIn = new ifstream();
 
 	if(n<3){
@@ -78,18 +79,16 @@ int main(int n, char* params[]) {
 
 	myList.reverse();
 
-	while(!myStack.empty()){
+	do{
 		exploreFile();
-	}
+	}while(!fileToExplore.empty());
 
 	myFileOut->close();
 
 	delete(myFileIn);
 	delete(myFileOut);
 
-	for(auto obj:mySet){
-		cout << obj << endl;
-	}
+	cout << fileExplored.size() << " : files explored" << endl;
 
 	return 0;
 }
